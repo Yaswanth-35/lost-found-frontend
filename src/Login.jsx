@@ -1,10 +1,11 @@
+
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./App.css";
+import API_URL from "./api";
 
 function Login() {
-
     const [loginType, setLoginType] = useState("USER");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -12,37 +13,31 @@ function Login() {
     const navigate = useNavigate();
 
     const login = async (e) => {
-
         e.preventDefault();
 
         try {
-
             let response;
 
             // USER LOGIN
             if (loginType === "USER") {
-
                 response = await axios.post(
-                    "http://localhost:8080/users/user-login",
+                    `${API_URL}/users/user-login`,
                     {
                         email: email,
                         password: password
                     }
                 );
-
             }
 
             // ADMIN LOGIN
             else {
-
                 response = await axios.post(
-                    "http://localhost:8080/users/admin-login",
+                    `${API_URL}/users/admin-login`,
                     {
                         email: email,
                         password: password
                     }
                 );
-
             }
 
             console.log("LOGIN SUCCESS:", response.data);
@@ -60,45 +55,35 @@ function Login() {
             navigate("/dashboard");
 
         } catch (error) {
-
-            console.log("LOGIN ERROR:", error);
+            console.error("LOGIN ERROR:", error);
 
             if (error.response) {
-
-                console.log(
+                console.error(
                     "Backend response:",
                     error.response.data
                 );
 
                 alert(
                     "Login failed: " +
-                    error.response.data
+                    (typeof error.response.data === "string"
+                        ? error.response.data
+                        : JSON.stringify(error.response.data))
                 );
-
             } else {
-
                 alert(
-                    "Cannot connect to backend. Make sure Spring Boot is running on port 8080."
+                    "Cannot connect to the backend. Please try again."
                 );
-
             }
         }
     };
 
-
     return (
-
         <div className="login-container">
-
             <div className="login-box">
-
                 <h1>Lost & Found</h1>
 
-
                 {/* LOGIN TYPE */}
-
                 <div className="login-type-buttons">
-
                     <button
                         type="button"
                         onClick={() => {
@@ -110,7 +95,6 @@ function Login() {
                         User Login
                     </button>
 
-
                     <button
                         type="button"
                         onClick={() => {
@@ -121,26 +105,20 @@ function Login() {
                     >
                         Admin Login
                     </button>
-
                 </div>
 
-
                 {/* TITLE */}
-
                 <h2>
                     {loginType === "USER"
                         ? "User Login"
                         : "Admin Login"}
                 </h2>
 
-
                 {/* LOGIN FORM */}
-
                 <form
                     className="login-form"
                     onSubmit={login}
                 >
-
                     <input
                         type="email"
                         placeholder="Enter email"
@@ -150,7 +128,6 @@ function Login() {
                         }
                         required
                     />
-
 
                     <input
                         type="password"
@@ -162,21 +139,18 @@ function Login() {
                         required
                     />
 
-
                     <button type="submit">
                         Login
                     </button>
+
                     <button
-    type="button"
-    onClick={() => navigate("/register")}
->
-    New User? Register
-</button>
-
+                        type="button"
+                        onClick={() => navigate("/register")}
+                    >
+                        New User? Register
+                    </button>
                 </form>
-
             </div>
-
         </div>
     );
 }
