@@ -1,10 +1,11 @@
+
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./App.css";
+import API_URL from "./api";
 
 function Register() {
-
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -12,7 +13,6 @@ function Register() {
     const navigate = useNavigate();
 
     const register = async (e) => {
-
         e.preventDefault();
 
         if (password !== confirmPassword) {
@@ -21,9 +21,8 @@ function Register() {
         }
 
         try {
-
             const response = await axios.post(
-                "http://localhost:8080/users/register",
+                `${API_URL}/users/register`,
                 {
                     email: email,
                     password: password
@@ -33,35 +32,27 @@ function Register() {
             console.log("REGISTER SUCCESS:", response.data);
 
             alert("Registration successful! Please login.");
-
             navigate("/login");
 
         } catch (error) {
-
             console.error("REGISTER ERROR:", error);
 
             if (error.response) {
+                const message =
+                    typeof error.response.data === "string"
+                        ? error.response.data
+                        : JSON.stringify(error.response.data);
 
-                alert(
-                    "Registration failed: " +
-                    error.response.data
-                );
-
+                alert("Registration failed: " + message);
             } else {
-
-                alert(
-                    "Cannot connect to backend."
-                );
+                alert("Cannot connect to backend. Please try again.");
             }
         }
     };
 
     return (
-
         <div className="login-container">
-
             <div className="login-box">
-
                 <h1>Lost & Found</h1>
 
                 <h2>User Registration</h2>
@@ -70,14 +61,11 @@ function Register() {
                     className="login-form"
                     onSubmit={register}
                 >
-
                     <input
                         type="email"
                         placeholder="Enter email"
                         value={email}
-                        onChange={(e) =>
-                            setEmail(e.target.value)
-                        }
+                        onChange={(e) => setEmail(e.target.value)}
                         required
                     />
 
@@ -85,9 +73,7 @@ function Register() {
                         type="password"
                         placeholder="Enter password"
                         value={password}
-                        onChange={(e) =>
-                            setPassword(e.target.value)
-                        }
+                        onChange={(e) => setPassword(e.target.value)}
                         required
                     />
 
@@ -104,7 +90,6 @@ function Register() {
                     <button type="submit">
                         Register
                     </button>
-
                 </form>
 
                 <br />
@@ -115,9 +100,7 @@ function Register() {
                 >
                     Back to Login
                 </button>
-
             </div>
-
         </div>
     );
 }
