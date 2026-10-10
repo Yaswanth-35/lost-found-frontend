@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./App.css";
-
+import API_URL from "./api";
 function Dashboard() {
     const [items, setItems] = useState([]);
     const [search, setSearch] = useState("");
