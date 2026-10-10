@@ -1,8 +1,10 @@
+
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./App.css";
 import API_URL from "./api";
+
 function Dashboard() {
     const [items, setItems] = useState([]);
     const [search, setSearch] = useState("");
@@ -25,13 +27,13 @@ function Dashboard() {
     const getItems = async () => {
         try {
             const response = await axios.get(
-                "http://localhost:8080/items"
+                `${API_URL}/items`
             );
 
             setItems(response.data);
         } catch (error) {
             console.error("Error fetching items:", error);
-            alert("Failed to fetch items");
+            alert("Failed to fetch items. Please try again.");
         }
     };
 
@@ -44,12 +46,13 @@ function Dashboard() {
 
         try {
             const response = await axios.get(
-                `http://localhost:8080/items/search?name=${encodeURIComponent(search)}`
+                `${API_URL}/items/search?name=${encodeURIComponent(search)}`
             );
 
             setItems(response.data);
         } catch (error) {
             console.error("Search error:", error);
+            alert("Failed to search items.");
             setItems([]);
         }
     };
@@ -78,15 +81,13 @@ function Dashboard() {
         if (!confirmDelete) return;
 
         try {
-            await axios.delete(
-                `http://localhost:8080/items/${id}`
-            );
+            await axios.delete(`${API_URL}/items/${id}`);
 
             alert("Item deleted successfully");
             getItems();
         } catch (error) {
             console.error("Delete error:", error);
-            alert("Failed to delete item");
+            alert("Failed to delete item.");
         }
     };
 
@@ -253,4 +254,3 @@ function Dashboard() {
 }
 
 export default Dashboard;
-
