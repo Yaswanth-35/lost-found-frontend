@@ -1,4 +1,7 @@
+import axios from "axios";
 
-const API_URL = "https://lost-found-backend-c9k9.onrender.com";
+const api = axios.create({
+  baseURL: "https://lost-found-backend-1qqr.onrender.com",
+});
 
-export default API_URL;
+export default api;
