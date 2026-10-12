@@ -12,9 +12,9 @@ function Dashboard() {
     const navigate = useNavigate();
 
     const email = localStorage.getItem("email");
-    const role = localStorage.getItem("role");
+    const storedRole = localStorage.getItem("role") || "";
+    const role = storedRole.replace(/^ROLE_/, "").toUpperCase();
 
-    // Check login and load items
     useEffect(() => {
         if (!email || !role) {
             navigate("/login", { replace: true });
@@ -24,36 +24,20 @@ function Dashboard() {
         getItems();
     }, []);
 
-    // Get all items
     const getItems = async () => {
         setLoading(true);
 
         try {
             const response = await api.get("/items");
-
-            console.log("Items received:", response.data);
-
-            setItems(
-                Array.isArray(response.data) ? response.data : []
-            );
+            setItems(Array.isArray(response.data) ? response.data : []);
         } catch (error) {
-            console.error("Fetch items failed:", {
-                status: error.response?.status,
-                data: error.response?.data,
-                message: error.message
-            });
-
-            alert(
-                `Failed to fetch items. Status: ${
-                    error.response?.status || "Network/CORS error"
-                }`
-            );
+            console.error("Fetch items error:", error.response?.data || error.message);
+            alert(`Failed to fetch items. Status: ${error.response?.status || "Network error"}`);
         } finally {
             setLoading(false);
         }
     };
 
-    // Search items
     const searchItems = async () => {
         if (!search.trim()) {
             await getItems();
@@ -67,23 +51,16 @@ function Dashboard() {
                 params: { name: search.trim() }
             });
 
-            setItems(
-                Array.isArray(response.data) ? response.data : []
-            );
+            setItems(Array.isArray(response.data) ? response.data : []);
         } catch (error) {
-            console.error("Search failed:", error.response?.data || error.message);
-            alert(
-                `Failed to search items. Status: ${
-                    error.response?.status || "Network/CORS error"
-                }`
-            );
+            console.error("Search error:", error.response?.data || error.message);
+            alert("Failed to search items.");
             setItems([]);
         } finally {
             setLoading(false);
         }
     };
 
-    // Update item - Admin only
     const updateItem = (id) => {
         if (role !== "ADMIN") {
             alert("Only admins can update items.");
@@ -93,35 +70,26 @@ function Dashboard() {
         navigate(`/update-item/${id}`);
     };
 
-    // Delete item - Admin only
     const deleteItem = async (id) => {
         if (role !== "ADMIN") {
             alert("Only admins can delete items.");
             return;
         }
 
-        const confirmDelete = window.confirm(
-            "Are you sure you want to delete this item?"
-        );
-
-        if (!confirmDelete) return;
+        if (!window.confirm("Are you sure you want to delete this item?")) {
+            return;
+        }
 
         try {
             await api.delete(`/items/${id}`);
-
             alert("Item deleted successfully.");
             await getItems();
         } catch (error) {
-            console.error("Delete failed:", error.response?.data || error.message);
-            alert(
-                `Failed to delete item. Status: ${
-                    error.response?.status || "Network/CORS error"
-                }`
-            );
+            console.error("Delete error:", error.response?.data || error.message);
+            alert(`Delete failed. Status: ${error.response?.status || "Network error"}`);
         }
     };
 
-    // Navigate to report page
     const reportItem = () => {
         if (!email || !role) {
             navigate("/login", { replace: true });
@@ -131,7 +99,6 @@ function Dashboard() {
         navigate("/report-item");
     };
 
-    // Logout
     const logout = () => {
         localStorage.removeItem("email");
         localStorage.removeItem("role");
@@ -147,12 +114,8 @@ function Dashboard() {
         <div className="dashboard-container">
             <div className="dashboard-header">
                 <h1>Lost &amp; Found Dashboard</h1>
-                <p>
-                    Welcome: <b>{email}</b>
-                </p>
-                <p>
-                    Role: <b>{role}</b>
-                </p>
+                <p>Welcome: <b>{email}</b></p>
+                <p>Role: <b>{role}</b></p>
             </div>
 
             <div className="dashboard-actions">
@@ -189,17 +152,11 @@ function Dashboard() {
                 </div>
 
                 <div className="dashboard-buttons">
-                    <button
-                        className="btn btn-report"
-                        onClick={reportItem}
-                    >
+                    <button className="btn btn-report" onClick={reportItem}>
                         Report Item
                     </button>
 
-                    <button
-                        className="btn btn-logout"
-                        onClick={logout}
-                    >
+                    <button className="btn btn-logout" onClick={logout}>
                         Logout
                     </button>
                 </div>
