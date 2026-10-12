@@ -1,9 +1,8 @@
 
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
+import api from "./api";
 import "./App.css";
-import API_URL from "./api";
 
 function UpdateItem() {
     const { id } = useParams();
@@ -19,59 +18,113 @@ function UpdateItem() {
     });
 
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState("");
 
+    // Fetch item
     useEffect(() => {
-        fetchItem();
-    }, [id]);
+        const fetchItem = async () => {
+            setLoading(true);
+            setError("");
 
-    // Fetch item details
-    const fetchItem = async () => {
-        try {
-            const response = await axios.get(
-                `${API_URL}/items/${id}`
-            );
+            try {
+                const response = await api.get(`/items/${id}`);
+                const data = response.data;
 
-            console.log("Item received:", response.data);
-            setItem(response.data);
-        } catch (error) {
-            console.error("Error loading item:", error);
-            alert("Cannot load item " + id);
-        } finally {
+                setItem({
+                    itemName: data.itemName || "",
+                    description: data.description || "",
+                    location: data.location || "",
+                    date: data.date || "",
+                    type: data.type || "",
+                    contact: data.contact || ""
+                });
+            } catch (error) {
+                console.error(
+                    "Fetch item error:",
+                    error.response?.data || error.message
+                );
+
+                setError(
+                    error.response?.status === 404
+                        ? "Item not found."
+                        : "Unable to load item."
+                );
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (id) {
+            fetchItem();
+        } else {
+            setError("Item ID is missing.");
             setLoading(false);
         }
-    };
+    }, [id]);
 
-    // Handle form input changes
+    // Handle changes
     const handleChange = (e) => {
-        setItem({
-            ...item,
-            [e.target.name]: e.target.value
-        });
+        const { name, value } = e.target;
+
+        setItem((previousItem) => ({
+            ...previousItem,
+            [name]: value
+        }));
     };
 
-    // Update item
+    // Save changes
     const handleUpdate = async (e) => {
         e.preventDefault();
+        setSaving(true);
+        setError("");
 
         try {
-            await axios.put(
-                `${API_URL}/items/${id}`,
-                item
-            );
+            await api.put(`/items/${id}`, item);
 
             alert("Item updated successfully!");
-            navigate("/dashboard");
+            navigate("/dashboard", { replace: true });
         } catch (error) {
-            console.error("Update error:", error);
-            alert("Failed to update item. Please try again.");
+            console.error(
+                "Update error:",
+                error.response?.data || error.message
+            );
+
+            setError(
+                typeof error.response?.data === "string"
+                    ? error.response.data
+                    : `Update failed. Status: ${
+                          error.response?.status || "Network error"
+                      }`
+            );
+        } finally {
+            setSaving(false);
         }
     };
 
-    // Loading screen
     if (loading) {
         return (
             <div className="report-container">
                 <h2>Loading item...</h2>
+            </div>
+        );
+    }
+
+    if (error && !item.itemName && !item.description) {
+        return (
+            <div className="report-container">
+                <div className="report-card">
+                    <h1>Update Item</h1>
+                    <p>{error}</p>
+
+                    <button
+                        type="button"
+                        className="back-btn"
+                        onClick={() => navigate("/dashboard")}
+                    >
+                        Back to Dashboard
+                    </button>
+                </div>
             </div>
         );
     }
@@ -81,13 +134,18 @@ function UpdateItem() {
             <div className="report-card">
                 <h1>Update Item</h1>
 
+                {error && (
+                    <p className="error-message">{error}</p>
+                )}
+
                 <form onSubmit={handleUpdate}>
                     <div className="form-group">
-                        <label>Item Name</label>
+                        <label htmlFor="itemName">Item Name</label>
                         <input
+                            id="itemName"
                             type="text"
                             name="itemName"
-                            value={item.itemName || ""}
+                            value={item.itemName}
                             onChange={handleChange}
                             placeholder="Enter item name"
                             required
@@ -95,10 +153,11 @@ function UpdateItem() {
                     </div>
 
                     <div className="form-group">
-                        <label>Description</label>
+                        <label htmlFor="description">Description</label>
                         <textarea
+                            id="description"
                             name="description"
-                            value={item.description || ""}
+                            value={item.description}
                             onChange={handleChange}
                             placeholder="Enter description"
                             required
@@ -106,11 +165,12 @@ function UpdateItem() {
                     </div>
 
                     <div className="form-group">
-                        <label>Location</label>
+                        <label htmlFor="location">Location</label>
                         <input
+                            id="location"
                             type="text"
                             name="location"
-                            value={item.location || ""}
+                            value={item.location}
                             onChange={handleChange}
                             placeholder="Where was it lost/found?"
                             required
@@ -118,11 +178,12 @@ function UpdateItem() {
                     </div>
 
                     <div className="form-group">
-                        <label>Date</label>
+                        <label htmlFor="date">Date</label>
                         <input
+                            id="date"
                             type="text"
                             name="date"
-                            value={item.date || ""}
+                            value={item.date}
                             onChange={handleChange}
                             placeholder="DD-MM-YYYY"
                             required
@@ -130,10 +191,11 @@ function UpdateItem() {
                     </div>
 
                     <div className="form-group">
-                        <label>Type</label>
+                        <label htmlFor="type">Type</label>
                         <select
+                            id="type"
                             name="type"
-                            value={item.type || ""}
+                            value={item.type}
                             onChange={handleChange}
                             required
                         >
@@ -144,11 +206,12 @@ function UpdateItem() {
                     </div>
 
                     <div className="form-group">
-                        <label>Contact</label>
+                        <label htmlFor="contact">Contact</label>
                         <input
+                            id="contact"
                             type="text"
                             name="contact"
-                            value={item.contact || ""}
+                            value={item.contact}
                             onChange={handleChange}
                             placeholder="Enter contact number"
                             required
@@ -159,13 +222,15 @@ function UpdateItem() {
                         <button
                             type="submit"
                             className="submit-btn"
+                            disabled={saving}
                         >
-                            Update Item
+                            {saving ? "Updating..." : "Update Item"}
                         </button>
 
                         <button
                             type="button"
                             className="back-btn"
+                            disabled={saving}
                             onClick={() => navigate("/dashboard")}
                         >
                             Cancel
