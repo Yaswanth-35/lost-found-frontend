@@ -20,7 +20,7 @@ function Register() {
         }
 
         try {
-            const response = await api.post("/users/register", {
+            const response = await api.post('${API_URL}/users/register', {
                 email: email,
                 password: password
             });
