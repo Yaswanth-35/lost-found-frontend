@@ -23,7 +23,7 @@ function Register() {
         try {
 
             const response = await axios.post(
-                "http://localhost:8080/users/register",
+                "https://lost-found-backend-1qqr.onrender.com/users/register",
                 {
                     email: email,
                     password: password
