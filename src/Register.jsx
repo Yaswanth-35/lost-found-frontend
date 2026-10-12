@@ -1,9 +1,8 @@
 
 import { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import api from "./api";
 import "./App.css";
-import API_URL from "./api";
 
 function Register() {
     const [email, setEmail] = useState("");
@@ -20,13 +19,11 @@ function Register() {
             return;
         }
 
-     const response = await axios.post(
-    ${API_URL}/users/register,
-    {
-        email: email,
-        password: password
-    }
-);
+        try {
+            const response = await api.post("/users/register", {
+                email: email,
+                password: password
+            });
 
             console.log("REGISTER SUCCESS:", response.data);
 
@@ -37,14 +34,23 @@ function Register() {
             console.error("REGISTER ERROR:", error);
 
             if (error.response) {
-                const message =
-                    typeof error.response.data === "string"
-                        ? error.response.data
-                        : JSON.stringify(error.response.data);
+                const data = error.response.data;
 
-                alert("Registration failed: " + message);
+                const message =
+                    typeof data === "string"
+                        ? data
+                        : JSON.stringify(data);
+
+                alert(
+                    "Registration failed: " +
+                    error.response.status +
+                    " - " +
+                    message
+                );
             } else {
-                alert("Cannot connect to backend. Please try again.");
+                alert(
+                    "Cannot connect to backend. Check whether the backend is running."
+                );
             }
         }
     };
@@ -52,8 +58,7 @@ function Register() {
     return (
         <div className="login-container">
             <div className="login-box">
-                <h1>Lost & Found</h1>
-
+                <h1>Lost &amp; Found</h1>
                 <h2>User Registration</h2>
 
                 <form
