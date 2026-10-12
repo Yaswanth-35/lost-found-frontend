@@ -21,7 +21,7 @@ function Register() {
         }
 
      const response = await axios.post(
-    `${API_URL}/users/register`,
+    ${API_URL}/users/register,
     {
         email: email,
         password: password
