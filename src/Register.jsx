@@ -22,7 +22,7 @@ function Register() {
 
         try {
             const response = await axios.post(
-                `${API_URL}/users/register`,
+                https://lost-found-frontend-rose.vercel.app//users/register,
                 {
                     email: email,
                     password: password
