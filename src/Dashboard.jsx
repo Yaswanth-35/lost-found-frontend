@@ -25,15 +25,16 @@ function Dashboard() {
 
     // Get all items
   
-const fetchItems = async () => {
-  try {
-    const response = await axios.get(`${API_URL}/items`);
-    console.log("Items received:", response.data);
-    setItems(response.data);
-  } catch (error) {
-    console.error("Fetch items error:", error.response?.status, error.message);
-  }
-};
+    const getItems = async () => {
+        try {
+           const response = await axios.get(`${API_URL}/items`);
+
+            setItems(response.data);
+        } catch (error) {
+            console.error("Error fetching items:", error);
+            alert("Failed to fetch items");
+        }
+    };
 
 
     // Search items
