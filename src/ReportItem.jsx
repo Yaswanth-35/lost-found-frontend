@@ -1,9 +1,8 @@
 
 import { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import api from "./api";
 import "./App.css";
-import API_URL from "./api";
 
 function ReportItem() {
     const navigate = useNavigate();
@@ -20,32 +19,39 @@ function ReportItem() {
     const [submitting, setSubmitting] = useState(false);
 
     const handleChange = (e) => {
-        setItem({
-            ...item,
-            [e.target.name]: e.target.value
-        });
+        const { name, value } = e.target;
+
+        setItem((previousItem) => ({
+            ...previousItem,
+            [name]: value
+        }));
     };
 
     const submitItem = async (e) => {
         e.preventDefault();
-
         setSubmitting(true);
 
         try {
-            await axios.post(`${API_URL}/items`, item);
+            const response = await api.post("/items", item);
+
+            console.log("Item saved:", response.status, response.data);
 
             alert("Item reported successfully!");
-            navigate("/dashboard");
+            navigate("/dashboard", { replace: true });
         } catch (error) {
-            console.error("Report item error:", error);
+            console.error("Report item failed:", {
+                status: error.response?.status,
+                data: error.response?.data,
+                message: error.message
+            });
 
-            if (error.response) {
-                alert(
-                    `Failed to report item. Server returned ${error.response.status}.`
-                );
-            } else {
-                alert("Cannot connect to the backend. Please try again.");
-            }
+            alert(
+                `Failed to report item. ${
+                    error.response
+                        ? `Server status: ${error.response.status}`
+                        : "Check your network connection or CORS settings."
+                }`
+            );
         } finally {
             setSubmitting(false);
         }
@@ -58,8 +64,9 @@ function ReportItem() {
 
                 <form onSubmit={submitItem}>
                     <div className="form-group">
-                        <label>Item Name</label>
+                        <label htmlFor="itemName">Item Name</label>
                         <input
+                            id="itemName"
                             type="text"
                             name="itemName"
                             placeholder="Enter item name"
@@ -70,8 +77,9 @@ function ReportItem() {
                     </div>
 
                     <div className="form-group">
-                        <label>Description</label>
+                        <label htmlFor="description">Description</label>
                         <textarea
+                            id="description"
                             name="description"
                             placeholder="Enter description"
                             value={item.description}
@@ -81,8 +89,9 @@ function ReportItem() {
                     </div>
 
                     <div className="form-group">
-                        <label>Location</label>
+                        <label htmlFor="location">Location</label>
                         <input
+                            id="location"
                             type="text"
                             name="location"
                             placeholder="Where was it lost/found?"
@@ -93,8 +102,9 @@ function ReportItem() {
                     </div>
 
                     <div className="form-group">
-                        <label>Date</label>
+                        <label htmlFor="date">Date</label>
                         <input
+                            id="date"
                             type="text"
                             name="date"
                             placeholder="DD-MM-YYYY"
@@ -105,8 +115,9 @@ function ReportItem() {
                     </div>
 
                     <div className="form-group">
-                        <label>Type</label>
+                        <label htmlFor="type">Type</label>
                         <select
+                            id="type"
                             name="type"
                             value={item.type}
                             onChange={handleChange}
@@ -119,8 +130,9 @@ function ReportItem() {
                     </div>
 
                     <div className="form-group">
-                        <label>Contact</label>
+                        <label htmlFor="contact">Contact</label>
                         <input
+                            id="contact"
                             type="text"
                             name="contact"
                             placeholder="Enter contact number"
