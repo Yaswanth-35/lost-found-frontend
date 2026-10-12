@@ -2,10 +2,8 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: "https://lost-found-backend-1qqr.onrender.com",
-    headers: {
-        "Content-Type": "application/json"
-    }
+    baseURL: "https://lost-found-backend-1qqr.onrender.com"
 });
 
 export default api;
+
