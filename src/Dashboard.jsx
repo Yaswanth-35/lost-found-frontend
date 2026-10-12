@@ -1,66 +1,92 @@
 
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import api from "./api";
 import "./App.css";
-import API_URL from "./api";
 
 function Dashboard() {
     const [items, setItems] = useState([]);
     const [search, setSearch] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const navigate = useNavigate();
 
     const email = localStorage.getItem("email");
     const role = localStorage.getItem("role");
 
-    // Check login before loading dashboard
+    // Check login and load items
     useEffect(() => {
         if (!email || !role) {
             navigate("/login", { replace: true });
-        } else {
-            getItems();
-        }
-    }, []);
-
-    // Get all items
-  
-    const getItems = async () => {
-        try {
-           const response = await axios.get(`${API_URL}/items`);
-
-            setItems(response.data);
-        } catch (error) {
-            console.error("Error fetching items:", error);
-            alert("Failed to fetch items");
-        }
-    };
-
-
-    // Search items
-    const searchItems = async () => {
-        if (search.trim() === "") {
-            getItems();
             return;
         }
 
-        try {
-            const response = await axios.get(
-                `${API_URL}/items/search?name=${encodeURIComponent(search)}`
-            );
+        getItems();
+    }, []);
 
-            setItems(response.data);
+    // Get all items
+    const getItems = async () => {
+        setLoading(true);
+
+        try {
+            const response = await api.get("/items");
+
+            console.log("Items received:", response.data);
+
+            setItems(
+                Array.isArray(response.data) ? response.data : []
+            );
         } catch (error) {
-            console.error("Search error:", error);
-            alert("Failed to search items.");
+            console.error("Fetch items failed:", {
+                status: error.response?.status,
+                data: error.response?.data,
+                message: error.message
+            });
+
+            alert(
+                `Failed to fetch items. Status: ${
+                    error.response?.status || "Network/CORS error"
+                }`
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Search items
+    const searchItems = async () => {
+        if (!search.trim()) {
+            await getItems();
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const response = await api.get("/items/search", {
+                params: { name: search.trim() }
+            });
+
+            setItems(
+                Array.isArray(response.data) ? response.data : []
+            );
+        } catch (error) {
+            console.error("Search failed:", error.response?.data || error.message);
+            alert(
+                `Failed to search items. Status: ${
+                    error.response?.status || "Network/CORS error"
+                }`
+            );
             setItems([]);
+        } finally {
+            setLoading(false);
         }
     };
 
     // Update item - Admin only
     const updateItem = (id) => {
         if (role !== "ADMIN") {
-            alert("Only admins can update items");
+            alert("Only admins can update items.");
             return;
         }
 
@@ -70,7 +96,7 @@ function Dashboard() {
     // Delete item - Admin only
     const deleteItem = async (id) => {
         if (role !== "ADMIN") {
-            alert("Only admins can delete items");
+            alert("Only admins can delete items.");
             return;
         }
 
@@ -81,17 +107,21 @@ function Dashboard() {
         if (!confirmDelete) return;
 
         try {
-            await axios.delete(`${API_URL}/items/${id}`);
+            await api.delete(`/items/${id}`);
 
-            alert("Item deleted successfully");
-            getItems();
+            alert("Item deleted successfully.");
+            await getItems();
         } catch (error) {
-            console.error("Delete error:", error);
-            alert("Failed to delete item.");
+            console.error("Delete failed:", error.response?.data || error.message);
+            alert(
+                `Failed to delete item. Status: ${
+                    error.response?.status || "Network/CORS error"
+                }`
+            );
         }
     };
 
-    // Report item
+    // Navigate to report page
     const reportItem = () => {
         if (!email || !role) {
             navigate("/login", { replace: true });
@@ -105,33 +135,26 @@ function Dashboard() {
     const logout = () => {
         localStorage.removeItem("email");
         localStorage.removeItem("role");
-
         setItems([]);
         navigate("/login", { replace: true });
     };
 
-    // Do not render dashboard when logged out
     if (!email || !role) {
         return null;
     }
 
     return (
         <div className="dashboard-container">
-
-            {/* HEADER */}
             <div className="dashboard-header">
-                <h1>Lost & Found Dashboard</h1>
-
+                <h1>Lost &amp; Found Dashboard</h1>
                 <p>
                     Welcome: <b>{email}</b>
                 </p>
-
                 <p>
                     Role: <b>{role}</b>
                 </p>
             </div>
 
-            {/* SEARCH */}
             <div className="dashboard-actions">
                 <div className="search-box">
                     <input
@@ -141,15 +164,14 @@ function Dashboard() {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                                searchItems();
-                            }
+                            if (e.key === "Enter") searchItems();
                         }}
                     />
 
                     <button
                         className="btn btn-search"
                         onClick={searchItems}
+                        disabled={loading}
                     >
                         Search
                     </button>
@@ -160,12 +182,12 @@ function Dashboard() {
                             setSearch("");
                             getItems();
                         }}
+                        disabled={loading}
                     >
                         All Items
                     </button>
                 </div>
 
-                {/* DASHBOARD BUTTONS */}
                 <div className="dashboard-buttons">
                     <button
                         className="btn btn-report"
@@ -183,15 +205,15 @@ function Dashboard() {
                 </div>
             </div>
 
-            {/* NO ITEMS */}
-            {items.length === 0 && (
+            {loading && <p>Loading items...</p>}
+
+            {!loading && items.length === 0 && (
                 <div className="no-items">
                     <h2>No Items Found</h2>
                 </div>
             )}
 
-            {/* ITEMS TABLE */}
-            {items.length > 0 && (
+            {!loading && items.length > 0 && (
                 <div className="table-container">
                     <table className="items-table">
                         <thead>
@@ -203,10 +225,7 @@ function Dashboard() {
                                 <th>Date</th>
                                 <th>Type</th>
                                 <th>Contact</th>
-
-                                {role === "ADMIN" && (
-                                    <th>Action</th>
-                                )}
+                                {role === "ADMIN" && <th>Action</th>}
                             </tr>
                         </thead>
 
@@ -221,23 +240,18 @@ function Dashboard() {
                                     <td>{item.type}</td>
                                     <td>{item.contact}</td>
 
-                                    {/* ADMIN ONLY */}
                                     {role === "ADMIN" && (
                                         <td>
                                             <button
                                                 className="update-btn"
-                                                onClick={() =>
-                                                    updateItem(item.id)
-                                                }
+                                                onClick={() => updateItem(item.id)}
                                             >
                                                 Update
                                             </button>
 
                                             <button
                                                 className="delete-btn"
-                                                onClick={() =>
-                                                    deleteItem(item.id)
-                                                }
+                                                onClick={() => deleteItem(item.id)}
                                             >
                                                 Delete
                                             </button>
