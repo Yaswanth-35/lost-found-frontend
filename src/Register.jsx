@@ -20,14 +20,13 @@ function Register() {
             return;
         }
 
-        try {
-            const response = await axios.post(
-                https://lost-found-frontend-rose.vercel.app//users/register,
-                {
-                    email: email,
-                    password: password
-                }
-            );
+     const response = await axios.post(
+    `${API_URL}/users/register`,
+    {
+        email: email,
+        password: password
+    }
+);
 
             console.log("REGISTER SUCCESS:", response.data);
 
